@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa vivo · Huellas de la gentrificación</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Public+Sans:wght@400;600;700&display=swap"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#FDF4CF;--panel:#FFFFFF;--ink:#2F3B26;--muted:#5E6A4C;--line:#D6CFA6;--T:#AF5933;--R:#556645;--N:#A3A37A;--accent:#E9B48C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161F;--panel:#18212D;--ink:#EEF1F4;--muted:#9FAAB7;--line:#2B3644}}
+:root[data-theme="dark"]{--bg:#10161F;--panel:#18212D;--ink:#EEF1F4;--muted:#9FAAB7;--line:#2B3644}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+#app{display:grid;grid-template-columns:360px 1fr;height:100vh}
+#panel{background:#4A5C3D;color:#FDF4CF;--ink:#FDF4CF;--muted:#DCD8AC;--line:#6E7C58;--panel:#4A5C3D;border-right:1px solid var(--line);padding:20px 20px 16px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+#map{height:100%;background:#EFE6C2}
+h1{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-size:30px;font-weight:800;letter-spacing:.01em;line-height:1.2;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:4px 0 0}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;padding:8px 6px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:#FDF4CF;color:#2F3B26;font-weight:600}
+.year{display:flex;align-items:center;gap:10px}
+.year b{font-family:'Saira Condensed',sans-serif;font-weight:800;font-size:42px;min-width:84px}
+#play{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:14px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.stat .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .k{font-size:12px;color:var(--muted)}
+.leg{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;box-shadow:0 0 0 1.5px #FDF4CF;margin-right:6px;vertical-align:middle}
+.ramp{height:10px;border-radius:5px;margin:4px 0}
+.ramp-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.chk{font-size:13px;display:flex;gap:8px;align-items:center}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.leaflet-tile-pane{filter:saturate(.35) sepia(.28) brightness(1.04) contrast(.92);opacity:.62}.leaflet-popup-content{font-family:inherit;font-size:13px;line-height:1.4;margin:12px 14px}
+.pp h3{margin:0 0 4px;font-size:15px}
+.pp .t{color:#5B6878;font-size:12px}
+.pp table{border-collapse:collapse;margin-top:6px;font-size:12px}
+.pp td{padding:2px 8px 2px 0;vertical-align:top}
+.pp .real{color:#AF5933;font-weight:700}
+.pp a{color:#556645}
+@media (max-width:760px){html,body{height:auto}#app{grid-template-columns:1fr;grid-template-rows:62vh auto;height:auto}#map{order:-1;height:62vh}#panel{border-right:0;padding:16px;gap:12px;overflow:visible}.sub{display:none}.year b{font-size:32px}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="panel">
+  <div>
+    <div style="font-size:11px;letter-spacing:.12em;font-weight:700;color:#E9B48C;margin-bottom:8px"><a href="./" style="color:#E9B48C;text-decoration:none">← Inicio</a> · STATE OF THE MAP LATAM 2026</div><h1>Huellas de la gentrificación</h1>
+    <p class="sub">El comercio de barrio en el historial de OpenStreetMap, año por año.</p>
+  </div>
+  <div><div class="lbl">Ciudad</div>
+    <div class="seg" id="city"><button data-c="med" class="on">Medellín</button><button data-c="cdmx">CDMX · Cuauhtémoc</button></div></div>
+  <div><div class="lbl">Colorear barrios por</div>
+    <div class="seg" id="layer"><button data-l="en" class="on">% inglés</button><button data-l="itco">ITCO</button><button data-l="map">Mapeadores</button></div></div>
+  <div><div class="lbl">Año</div>
+    <div class="year"><button id="play" aria-label="Reproducir">▶</button><b id="yr">2026</b></div>
+    <input id="slider" type="range" min="2008" max="2026" value="2026" step="1" aria-label="Año"></div>
+  <div class="stats">
+    <div class="stat"><div class="v" id="sT">–</div><div class="k">Transformación</div></div>
+    <div class="stat"><div class="v" id="sR">–</div><div class="k">Tradicional</div></div>
+    <div class="stat"><div class="v" id="sX">–</div><div class="k">Cambios reales en el año</div></div>
+    <div class="stat"><div class="v" id="sE">–</div><div class="k">Nombres en inglés</div></div>
+  </div>
+  <div class="leg" id="legend"></div>
+  <div class="leg">
+    <div><span class="dot" style="background:#AF5933"></span>Transformación (café, coworking, hostal, gimnasio…)</div>
+    <div><span class="dot" style="background:#556645"></span>Tradicional (tienda, panadería, taller…)</div>
+    <div><span class="dot" style="background:#A3A37A"></span>Neutral</div>
+    <div><span class="dot" style="background:transparent;border:2.5px solid #E9B48C"></span>Cambio real ese año (cierre, relevo, reemplazo)</div>
+    <label class="chk"><input type="checkbox" id="neutral"> Mostrar neutrales</label>
+    <label class="chk"><input type="checkbox" id="onlyreal"> Solo cambios reales del año</label>
+  </div>
+  <p class="note">ITCO: Índice de Transformación Comercial en OSM (−100 a +100), solo en barrios con datos suficientes. % inglés: proporción de nombres en inglés entre los negocios con idioma identificable (clasificación por palabras clave, aproximada). Las fechas son de edición del mapa, no de apertura del negocio.<br><br>Datos © colaboradores de OpenStreetMap (ODbL), vía ohsome API (HeiGIT). Método y código abiertos: <a style="color:#E9B48C" href="https://github.com/sdtorres07/huellas-osm">github.com/sdtorres07/huellas-osm</a> · Sergio David Torres Llanes</p>
+</aside>
+<div id="map"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const DATA=/*DATA*/;
+const CAT={T:"Transformación",R:"Tradicional",N:"Neutral","":"Fuera del mapa"};
+const TIPO={c:"creación",e:"etiquetado",s:"especificación",o:"corrección",t:"reetiquetado",m:"mutación",r:"relevo",x:"cierre",p:"reemplazo",d:"eliminación"};
+const COL={T:"#AF5933",R:"#556645",N:"#A3A37A"};
+const VIEW={med:[[6.17,-75.64],[6.32,-75.52]],cdmx:[[19.405,-99.18],[19.465,-99.12]]};
+let city="med",layer="en",year=2026,showN=false,onlyReal=false;
+
+const map=L.map("map",{preferCanvas:true,zoomControl:true});
+const OSMATT='&copy; <a href="https://www.openstreetmap.org/copyright">colaboradores de OpenStreetMap</a>';
+const FONDOS=[["https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",{maxZoom:19,subdomains:"abc",attribution:OSMATT+' · Estilo <a href="https://www.hotosm.org/">HOT</a>, alojado por <a href="https://openstreetmap.fr/">OSM France</a>'}],
+  ["https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:OSMATT}]];
+let fondo=null,fi=0,fallos=0;
+function ponerFondo(i){if(fondo)map.removeLayer(fondo);fi=i;fallos=0;fondo=L.tileLayer(FONDOS[i][0],FONDOS[i][1]).addTo(map);fondo.bringToBack();
+  fondo.on("tileerror",()=>{if(++fallos>3&&fi+1<FONDOS.length)ponerFondo(fi+1)})}
+ponerFondo(0);
+const canvas=L.canvas({padding:.3});
+let poly=null,pts=L.layerGroup().addTo(map);
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function lerp(a,b,t){return Math.round(a+(b-a)*t)}
+function mix(c1,c2,t){const p=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));const a=p(c1),b=p(c2);return"#"+a.map((v,i)=>lerp(v,b[i],t).toString(16).padStart(2,"0")).join("")}
+function colorFor(p){
+  if(layer==="itco"){const v=p.itco;if(v==null)return null;const t=Math.max(-1,Math.min(1,v/50));return t<0?mix("#FDF4CF","#556645",-t):mix("#FDF4CF","#AF5933",t)}
+  if(layer==="en"){const v=p.en;if(v==null||p.n_en<8)return null;return mix("#FBFBF8","#F2A27E",Math.min(1,v/25)*.5+(v>25?0:0)) && (v>25?mix("#E9B48C","#AF5933",Math.min(1,(v-25)/30)):mix("#FDF4CF","#E9B48C",v/25))}
+  const v=p.mapeadores;if(!v)return null;return mix("#FDF4CF","#4A5C3D",Math.min(1,Math.log10(v+1)/2.3))
+}
+function legend(){
+  const el=document.getElementById("legend");
+  const g={itco:["linear-gradient(90deg,#556645,#FDF4CF,#AF5933)","−50 hacia lo tradicional","0","+50 hacia la transformación"],
+           en:["linear-gradient(90deg,#FDF4CF,#E9B48C,#AF5933)","0 %","25 %","50 %+ en inglés"],
+           map:["linear-gradient(90deg,#FDF4CF,#4A5C3D)","1","15","200+ mapeadores"]}[layer];
+  el.innerHTML=`<div class="ramp" style="background:${g[0]}"></div><div class="ramp-l"><span>${g[1]}</span><span>${g[2]}</span><span>${g[3]}</span></div><div class="ramp-l"><span>Gris claro: datos insuficientes</span></div>`;
+}
+function fmt(v,s=""){return v==null?"–":(typeof v==="number"?(Math.round(v*10)/10)+s:v)}
+function drawPoly(){
+  if(poly)map.removeLayer(poly);
+  const ciudad=DATA[city].ciudad_en[2026];
+  poly=L.geoJSON(DATA[city].barrios,{style:f=>{const c=colorFor(f.properties);return{color:"#9A9A6E",weight:.6,fillColor:c||"#E8DFB8",fillOpacity:c?.68:.35}},
+    onEachFeature:(f,l)=>{const p=f.properties;l.bindPopup(`<div class="pp"><h3>${esc(p.barrio)}</h3><div class="t">${esc(p.comuna||"")}${p.grupo?" · "+(p.grupo==="control"?"grupo control":"transformación esperada"):""}</div>
+<table><tr><td>ITCO</td><td><b>${fmt(p.itco)}</b> ${p.confianza?"("+esc(p.confianza)+")":""}</td></tr>
+<tr><td>Nombres en inglés</td><td><b>${fmt(p.en," %")}</b> ${p.n_en?"de "+p.n_en+" nombres":""} · ciudad ${ciudad} %</td></tr>
+<tr><td>Cambios reales</td><td>${fmt(p.cambio_real)}</td></tr><tr><td>Sustituciones trad.→transf.</td><td>${fmt(p.sust)}</td></tr>
+<tr><td>Mapeadores</td><td>${fmt(p.mapeadores)}</td></tr></table></div>`)}}).addTo(map);
+  poly.bringToBack();
+}
+const ENRX=/\b(the|coffee|house|hostel|rooftop|brunch|burger|burgers|grill|lounge|studio|store|shop|market|bakery|kitchen|club|wine|beer|brewing|brew|craft|lab|co|hub|space|work|works|fitness|gym|yoga|bistro|deli|street|garden|home|living|suites|boutique|homes|apartments|spot|corner|food|drinks|tattoo|barber|barbershop|nails|beauty|happy|love|good|green|black|red|urban|city|art|gallery|vintage|organic|vegan|by|and|&)\b/g;
+const ESRX=/\b(la|el|los|las|de|del|tienda|panader[ií]a|ferreter[ií]a|droguer[ií]a|papeler[ií]a|miscel[aá]nea|carnicer[ií]a|restaurante|cafeter[ií]a|almac[eé]n|taller|peluquer[ií]a|sal[oó]n|y|casa|don|doña|mi|tu|sabor|comidas|asadero|fruver|licorera|granero|estanco|fonda|cocina|piqueteadero|taquer[ií]a|tortiller[ií]a|abarrotes|tlapaler[ií]a|farmacia|est[eé]tica|cantina|mercado)\b/g;
+function lang(n){if(!n)return"";const s=n.toLowerCase();const a=(s.match(ENRX)||[]).length,b=(s.match(ESRX)||[]).length;return a>b?"en":b>a?"es":""}
+function stateAt(o,y){let st=null,nm="",real=false;for(const h of o.h){if(h[0]>y)break;if(h[2]!==0)nm=h[2];st=h;if(h[0]===y&&h[5])real=true}return st?{cat:st[1],name:nm,tag:st[3],real}:null}
+function popupObj(o){
+  let nm="",rows="";for(const h of o.h){if(h[2]!==0)nm=h[2];rows+=`<tr${h[5]?' class="real"':""}><td>${h[0]}</td><td>${TIPO[h[4]]||""}</td><td>${esc(h[3]||"—")}${nm?" · "+esc(nm):""}</td></tr>`}
+  return `<div class="pp"><h3>${esc(nm||"(sin nombre)")}</h3><div class="t">${esc(o.b)}</div><table>${rows}</table><a href="https://www.openstreetmap.org/${o.o}/history" target="_blank" rel="noopener">Ver historial en OSM ↗</a></div>`;
+}
+function drawPts(){
+  pts.clearLayers();let nT=0,nR=0,nX=0,en=0,cl=0;
+  for(const o of DATA[city].objs){
+    const s=stateAt(o,year);if(!s)continue;
+    if(s.real)nX++;
+    if(!s.cat){if(s.real&&o.h.length){/* cierre visible */}else continue}
+    if(s.cat==="T")nT++;if(s.cat==="R")nR++;
+    if(s.cat&&s.name){const l=lang(s.name);if(l){cl++;if(l==="en")en++}}
+    if(onlyReal&&!s.real)continue;
+    if(s.cat==="N"&&!showN&&!s.real)continue;
+    const c=s.cat?COL[s.cat]:"#16202E";
+    const m=L.circleMarker([o.y,o.x],{renderer:canvas,radius:s.real?6.5:3.2,color:s.real?"#2F3B26":"#FDF4CF",weight:s.real?2.5:.6,fillColor:s.cat?c:"#FFFFFF",fillOpacity:s.real?.95:.75});
+    m.on("click",()=>m.bindPopup(popupObj(o)).openPopup());pts.addLayer(m);
+  }
+  document.getElementById("sT").textContent=nT.toLocaleString("es");
+  document.getElementById("sR").textContent=nR.toLocaleString("es");
+  document.getElementById("sX").textContent=nX.toLocaleString("es");
+  document.getElementById("sE").textContent=cl?Math.round(100*en/cl)+" %":"–";
+  document.getElementById("yr").textContent=year;
+}
+function setCity(c){city=c;map.fitBounds(VIEW[c]);drawPoly();drawPts()}
+document.querySelectorAll("#city button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#city button").forEach(x=>x.classList.toggle("on",x===b));setCity(b.dataset.c)});
+document.querySelectorAll("#layer button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#layer button").forEach(x=>x.classList.toggle("on",x===b));layer=b.dataset.l;legend();drawPoly()});
+const sl=document.getElementById("slider");sl.oninput=()=>{year=+sl.value;drawPts()};
+document.getElementById("neutral").onchange=e=>{showN=e.target.checked;drawPts()};
+document.getElementById("onlyreal").onchange=e=>{onlyReal=e.target.checked;drawPts()};
+let timer=null;const pb=document.getElementById("play");
+pb.onclick=()=>{if(timer){clearInterval(timer);timer=null;pb.textContent="▶";return}
+  if(year>=2026){year=2008;sl.value=2008}pb.textContent="❚❚";
+  timer=setInterval(()=>{if(year>=2026){clearInterval(timer);timer=null;pb.textContent="▶";return}year++;sl.value=year;drawPts()},900)};
+const q=new URLSearchParams(location.search);if(q.get("ciudad")==="cdmx")document.querySelector('#city button[data-c="cdmx"]').click();else setCity("med");
+legend();
+</script>
+</body>
+</html>
