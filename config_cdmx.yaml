@@ -1,0 +1,83 @@
+# =====================================================================
+# Configuración — Réplica en Ciudad de México (alcaldía Cuauhtémoc)
+# =====================================================================
+# Es la MISMA herramienta: solo cambia esta configuración y la taxonomía.
+# Demuestra que la metodología es 100% replicable, sin presupuesto.
+
+api:
+  url: https://api.heigit.org/ohsome-api/v2-rc
+  pausa_segundos: 2
+  reintentos: 5
+
+# Taxonomía y datos crudos propios de la réplica.
+taxonomia: taxonomia_cdmx.yaml
+datos_crudos: data/raw_cdmx
+
+# Rectángulo que cubre la alcaldía Cuauhtémoc [lon_min, lat_min, lon_max, lat_max]
+area_descarga: [-99.185, 19.400, -99.110, 19.470]
+
+anio_inicio: 2010
+anio_fin: 2026
+
+barrios:
+  # Colonias de la CDMX. Conjunto "Colonias" del portal datos.cdmx.gob.mx.
+  # Si no está disponible, descargar límites place=neighbourhood/boundary de OSM
+  # para la alcaldía Cuauhtémoc y anotarlo (ver INFORME_KIRO.md).
+  archivo: data/colonias_cuauhtemoc.geojson
+  campo_nombre: nombre
+  campo_comuna: alcaldia
+  servicio: ""   # se descarga manualmente del portal de datos abiertos de CDMX
+
+# Colonias de estudio (nombres como aparecen en el conjunto de colonias).
+barrios_estudio:
+  transformacion_esperada:
+    - Roma Norte
+    - Roma Sur
+    - Condesa
+    - Hipodromo
+    - Hipodromo Condesa
+    - Juarez
+  control:
+    - Morelos
+    - Guerrero
+    - Centro
+
+barrios_prometidos:
+  - Roma Norte
+  - Condesa
+  - Centro
+
+periodos:
+  - {nombre: "2014-2019", inicio: "2014-01-01", fin: "2019-01-01"}
+  - {nombre: "2019-2026", inicio: "2019-01-01", fin: "2026-01-01"}
+  - {nombre: "2014-2026", inicio: "2014-01-01", fin: "2026-01-01"}
+
+periodo_principal: "2014-2026"
+serie_anios: [2012, 2026]
+
+itco:
+  stock_minimo: 10
+  eventos_minimos: 5
+  cambio_real_minimo: 5
+  contribuyentes_minimos: 3
+  max_peso_un_usuario: 0.6
+  max_peso_un_changeset: 0.5
+  eventos_confianza_alta: 20
+  # R4: intervalo de confianza 95 % del ITCO por bootstrap (remuestreo de eventos)
+  bootstrap: 2000
+  semilla: 2026
+
+reemplazo:
+  radio_m: 25
+  ventana_antes_meses: 3
+  ventana_despues_meses: 24
+  umbral_redibujo: 80
+  changeset_masivo: 50
+  radios_sensibilidad: [15, 25, 40]
+  ventanas_sensibilidad: [12, 24, 36]
+
+validacion:
+  tamano_muestra: 40
+  semilla: 2026
+
+salidas: salidas_cdmx

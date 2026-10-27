@@ -1,0 +1,17 @@
+pandas>=2.1
+numpy>=1.26
+pyarrow>=14
+matplotlib>=3.8
+requests>=2.31
+pyyaml>=6.0
+rapidfuzz>=3.0
+# Series temporales con la API ohsome v1 (comando `series`)
+ohsome>=0.3
+# Usa el almacén de certificados del sistema operativo (evita fallos de SSL
+# detrás de proxys/antivirus que inspeccionan TLS, comunes en redes institucionales).
+truststore>=0.9
+# Opcional: para exportar GeoPackage y leer barrios en .gpkg/.shp
+geopandas>=0.14
+
+# Opcional: simplifica los polígonos del mapa web (generar_mapa.py)
+shapely>=2.0

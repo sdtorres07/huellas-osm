@@ -1,0 +1,76 @@
+# =====================================================================
+# Taxonomía del ITCO — réplica Ciudad de México (alcaldía Cuauhtémoc)
+# =====================================================================
+# Es la MISMA taxonomía de Medellín con añadidos locales (cocina y tienda
+# tradicional mexicana). Mantener la base igual hace la metodología 100%
+# replicable: solo cambia la configuración, no el método.
+# =====================================================================
+
+claves_completas: [shop, craft, office]
+
+reglas:
+  # ---------- Restaurantes: la cocina decide ----------
+  # R5: pizza y burger NO son señal de gentrificación en Medellín ni en CDMX
+  # (pizzerías y hamburgueserías populares hay en todos los barrios). Se quitaron
+  # de la lista de transformación: caen en la regla general "ambiguo".
+  - categoria: transformacion
+    clave: amenity
+    valores: [restaurant, fast_food]
+    cocina: [sushi, japanese, ramen, italian, thai, vegan, vegetarian,
+             international, mediterranean, french, korean, asian,
+             fusion, poke, brunch, bagel, healthy, steak_house, tapas]
+  - categoria: tradicional
+    clave: amenity
+    valores: [restaurant, fast_food]
+    # Cocina tradicional mexicana agregada para la réplica.
+    cocina: [regional, colombian, local, antioqueña, paisa, chicken,
+             empanada, arepa, corrientazo,
+             mexican, tacos, taco, antojitos, fonda, tortas, seafood]
+
+  # ---------- Transformación ----------
+  - categoria: transformacion
+    clave: amenity
+    valores: [cafe, coworking_space, ice_cream]
+  - categoria: transformacion
+    clave: office
+    valores: [coworking]
+  - categoria: transformacion
+    clave: leisure
+    valores: [fitness_centre]
+  - categoria: transformacion
+    clave: tourism
+    valores: [hostel, guest_house, apartment, hotel, gallery]
+  - categoria: transformacion
+    clave: shop
+    valores: [coffee, wine, deli, boutique, art, cosmetics, interior_decoration,
+              organic, chocolate, tea, bicycle, outdoor, fashion_accessories,
+              perfumery, gift]
+
+  # ---------- Tradicional ----------
+  - categoria: tradicional
+    clave: craft
+    valores: ["*"]
+  - categoria: tradicional
+    clave: amenity
+    valores: [marketplace]
+  - categoria: tradicional
+    clave: shop
+    # tortilleria y abarrotes agregados para CDMX (comercio tradicional local).
+    valores: [convenience, general, variety_store, kiosk, butcher, greengrocer,
+              bakery, dairy, frozen_food, seafood, hardware, doityourself,
+              electrical, paint, trade, wholesale, car_repair, car_parts, tyres,
+              motorcycle, motorcycle_repair, tailor, shoe_repair, sewing,
+              fabric, laundry, dry_cleaning, second_hand, pawnbroker,
+              agrarian, lottery, funeral_directors, locksmith, glaziery,
+              tortilleria, abarrotes]
+  - categoria: tradicional
+    clave: man_made
+    valores: [works]
+
+  # ---------- Ambiguo ----------
+  - categoria: ambiguo
+    clave: amenity
+    valores: [bar, pub, nightclub, restaurant, fast_food, biergarten]
+  - categoria: ambiguo
+    clave: shop
+    valores: [clothes, beauty, hairdresser, supermarket, alcohol, tattoo]

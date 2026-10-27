@@ -1,0 +1,85 @@
+# =====================================================================
+# Taxonomía del ITCO — qué etiquetas de OSM cuentan como qué
+# =====================================================================
+# Este archivo ES la definición del índice. Si alguien no está de acuerdo
+# con una clasificación, la cambia aquí, vuelve a correr `procesar`, y
+# el análisis de sensibilidad le dice si las conclusiones cambian.
+#
+# Categorías:
+#   transformacion : comercio asociado a gentrificación comercial/turistificación
+#   tradicional    : tejido comercial y productivo de barrio
+#   ambiguo        : depende del contexto (un "bar" en Provenza no es una
+#                    cantina en Manrique). Por defecto se trata como neutral
+#                    y el análisis de sensibilidad lo prueba en ambos lados.
+#   neutral        : (implícita) cualquier objeto con una de las
+#                    `claves_completas` que no coincida con ninguna regla.
+#
+# Las reglas se evalúan EN ORDEN; gana la primera que coincide.
+# valores: ["*"] significa "cualquier valor".
+# cocina: (opcional) solo coincide si la etiqueta cuisine=* contiene alguno.
+# =====================================================================
+
+claves_completas: [shop, craft, office]
+
+reglas:
+  # ---------- Restaurantes: la cocina decide ----------
+  # R5: pizza y burger NO son señal de gentrificación en Medellín ni en CDMX
+  # (pizzerías y hamburgueserías populares hay en todos los barrios). Se quitaron
+  # de la lista de transformación: caen en la regla general "ambiguo".
+  - categoria: transformacion
+    clave: amenity
+    valores: [restaurant, fast_food]
+    cocina: [sushi, japanese, ramen, italian, thai, vegan, vegetarian,
+             international, mediterranean, french, korean, asian,
+             fusion, poke, brunch, bagel, healthy, steak_house, tapas]
+  - categoria: tradicional
+    clave: amenity
+    valores: [restaurant, fast_food]
+    cocina: [regional, colombian, local, antioqueña, paisa, chicken,
+             empanada, arepa, corrientazo]
+
+  # ---------- Transformación ----------
+  - categoria: transformacion
+    clave: amenity
+    valores: [cafe, coworking_space, ice_cream]
+  - categoria: transformacion
+    clave: office
+    valores: [coworking]
+  - categoria: transformacion
+    clave: leisure
+    valores: [fitness_centre]
+  - categoria: transformacion
+    clave: tourism
+    valores: [hostel, guest_house, apartment, hotel, gallery]
+  - categoria: transformacion
+    clave: shop
+    valores: [coffee, wine, deli, boutique, art, cosmetics, interior_decoration,
+              organic, chocolate, tea, bicycle, outdoor, fashion_accessories,
+              perfumery, gift]
+
+  # ---------- Tradicional ----------
+  - categoria: tradicional
+    clave: craft
+    valores: ["*"]
+  - categoria: tradicional
+    clave: amenity
+    valores: [marketplace]
+  - categoria: tradicional
+    clave: shop
+    valores: [convenience, general, variety_store, kiosk, butcher, greengrocer,
+              bakery, dairy, frozen_food, seafood, hardware, doityourself,
+              electrical, paint, trade, wholesale, car_repair, car_parts, tyres,
+              motorcycle, motorcycle_repair, tailor, shoe_repair, sewing,
+              fabric, laundry, dry_cleaning, second_hand, pawnbroker,
+              agrarian, lottery, funeral_directors, locksmith, glaziery]
+  - categoria: tradicional
+    clave: man_made
+    valores: [works]
+
+  # ---------- Ambiguo ----------
+  - categoria: ambiguo
+    clave: amenity
+    valores: [bar, pub, nightclub, restaurant, fast_food, biergarten]
+  - categoria: ambiguo
+    clave: shop
+    valores: [clothes, beauty, hairdresser, supermarket, alcohol, tattoo]

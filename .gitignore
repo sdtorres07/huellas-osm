@@ -1,0 +1,22 @@
+# Secretos: NUNCA subir la clave de ohsome
+.env
+
+# Entornos y cachés
+.venv/
+__pycache__/
+*.pyc
+
+# Datos crudos descargados (se regeneran con `python -m huellas descargar`)
+data/raw/
+data/raw_v1/
+data/raw_cdmx/
+data/prueba_contribuciones.parquet
+data/demo_barrios.geojson
+
+# Salidas del análisis (se regeneran con `procesar`); las cifras y figuras
+# de la charla sí se suben, en charla/
+salidas/
+salidas_v1/
+salidas_cdmx/
+salidas_demo/
+*.gpkg

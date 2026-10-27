@@ -1,0 +1,106 @@
+# =====================================================================
+# Configuración — Huellas de la gentrificación (Medellín)
+# =====================================================================
+
+api:
+  # URL de la API ohsome v2. Cuando HeiGIT quite el "-rc", cambia a
+  # https://api.heigit.org/ohsome-api/v2
+  url: https://api.heigit.org/ohsome-api/v2-rc
+  # La API key NO va aquí: ponla en la variable de entorno OHSOME_API_KEY
+  # o en un archivo .env en esta carpeta (OHSOME_API_KEY=tu-clave).
+  pausa_segundos: 2        # pausa entre peticiones, por cortesía
+  reintentos: 5
+
+# Área de descarga: rectángulo que cubre la zona urbana de Medellín
+# [lon_min, lat_min, lon_max, lat_max]
+area_descarga: [-75.665, 6.155, -75.515, 6.355]
+
+# Años de historial a descargar (desde los inicios de OSM en la ciudad)
+anio_inicio: 2008
+anio_fin: 2026            # incluye contribuciones hasta el último dato disponible
+
+# Archivo de taxonomía y carpeta de datos crudos (configurables para replicar
+# en otra ciudad; por defecto, los valores de Medellín).
+taxonomia: taxonomia.yaml
+datos_crudos: data/raw
+
+barrios:
+  archivo: data/barrios_medellin.geojson
+  campo_nombre: nombre_barrio
+  campo_comuna: nombre_comuna
+  # Servicio oficial de la Alcaldía (capa "Límite Barrio_Vereda Catastral")
+  servicio: https://www.medellin.gov.co/servidormapas/rest/services/ServiciosCatastro/Base_Catastral/MapServer/1
+
+# Barrios que se destacan en mapas, gráficos y muestra de validación.
+# Los nombres deben coincidir con el catálogo oficial (sin importar tildes
+# ni mayúsculas). Corre `python -m huellas barrios` para ver la lista.
+# El ITCO se calcula para TODOS los barrios; esta lista es para el relato.
+barrios_estudio:
+  transformacion_esperada:
+    - Barrio Colombia
+    - Manila
+    - El Poblado
+    - Laureles
+    - Prado
+    - Loreto
+    - La Candelaria      # centro histórico
+    - Boston
+    - Los Conquistadores
+  control:
+    - Aranjuez
+    - Castilla
+    - Belén
+    - Robledo
+    - Versalles No. 1    # popular con datos
+    - Llanaditas         # popular con datos
+
+# Barrios que la propuesta nombró explícitamente: se reportan aunque no tengan
+# ITCO, con su nivel de dato (número de comercios, mapeadores, cambios reales).
+barrios_prometidos:
+  - Barrio Colombia
+  - Loreto
+  - Prado
+  - La Candelaria
+
+periodos:
+  - {nombre: "2014-2019", inicio: "2014-01-01", fin: "2019-01-01"}
+  - {nombre: "2019-2026", inicio: "2019-01-01", fin: "2026-01-01"}
+  - {nombre: "2014-2026", inicio: "2014-01-01", fin: "2026-01-01"}
+
+# Periodo que se usa para el mapa principal y el resumen
+periodo_principal: "2014-2026"
+
+# Serie anual (fotografías al 1 de enero de cada año)
+serie_anios: [2012, 2026]
+
+itco:
+  stock_minimo: 10          # comercios (trans+trad) mínimos para calcular el ITCO
+  eventos_minimos: 5        # movimientos mínimos (para índice de mirada e ITCO v1)
+  cambio_real_minimo: 5     # eventos de cambio real mínimos para el ITCO v2
+  # Umbrales de confianza por sesgo de mapeo
+  contribuyentes_minimos: 3
+  max_peso_un_usuario: 0.6  # si un solo usuario explica >60% de los eventos -> baja
+  max_peso_un_changeset: 0.5  # importación o jornada masiva -> baja
+  eventos_confianza_alta: 20
+  # R4: intervalo de confianza 95 % del ITCO por bootstrap (remuestreo de eventos)
+  bootstrap: 2000
+  semilla: 2026
+
+# Reemplazo espacial: lo que de verdad hacen los mapeadores (borran el nodo
+# viejo y crean uno nuevo cerca, en vez de registrar la mutación sobre el mismo
+# objeto). Un comercio A sale del mapa y B aparece cerca y poco después.
+reemplazo:
+  radio_m: 25               # distancia máxima entre A (sale) y B (aparece)
+  ventana_antes_meses: 3    # B puede aparecer hasta 3 meses ANTES de que A salga
+  ventana_despues_meses: 24 # … y hasta 24 meses después
+  umbral_redibujo: 80       # si los nombres se parecen ≥ esto, es "redibujo" (no cuenta)
+  changeset_masivo: 50      # changeset con > 50 objetos comerciales = edición masiva
+  # Barrido de sensibilidad obligatorio (radio × ventana)
+  radios_sensibilidad: [15, 25, 40]
+  ventanas_sensibilidad: [12, 24, 36]
+
+validacion:
+  tamano_muestra: 40
+  semilla: 2026
+
+salidas: salidas
